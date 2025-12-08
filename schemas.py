@@ -27,3 +27,16 @@ class TgStatResponse(BaseModel):
     response: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
+
+class CategorySchema(BaseModel):
+    code: str
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class CategorySyncResponse(BaseModel):
+    saved_count: int
+    categories: list[CategorySchema]
+

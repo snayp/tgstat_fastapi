@@ -19,3 +19,14 @@ class ApiRequest(Base):
     def __repr__(self):
         return f"<ApiRequest(id={self.id}, endpoint='{self.endpoint}', status_code={self.status_code})>"
 
+
+class Category(Base):
+    """Справочник категорий TGStat"""
+    __tablename__ = "tgstat_categories"
+
+    code = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False, index=True)
+
+    def __repr__(self):
+        return f"<Category(code='{self.code}', name='{self.name}')>"
+
