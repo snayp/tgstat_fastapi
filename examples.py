@@ -23,17 +23,23 @@ async def example_make_request():
         print(response.json())
         print("\n" + "="*50 + "\n")
         
-        # Пример 2: Запрос без сохранения в БД
-        response = await client.get(
-            f"{BASE_URL}/api/tgstat/request",
-            params={
-                "endpoint": "/channels/search",
-                "params": json.dumps({"q": "python"}),
-                "save_to_db": "false"
-            }
-        )
-        print("Пример 2 - Запрос без сохранения:")
-        print(response.json())
+        # Пример 2: Поиск по двум категориям с сохранением результатов
+        categories = ["apps", "art"]
+        search_results = {}
+        for category in categories:
+            search_response = await client.get(
+                f"{BASE_URL}/api/tgstat/request",
+                params={
+                    "endpoint": "/channels/search",
+                    "params": json.dumps({"q": "технологии", "category": category}),
+                    "save_to_db": "true"
+                }
+            )
+            search_results[category] = search_response.json()
+        
+        print("Пример 2 - Поиск по категориям и сохранение результатов:")
+        for category, result in search_results.items():
+            print(f"{category}: {result}")
         print("\n" + "="*50 + "\n")
 
 

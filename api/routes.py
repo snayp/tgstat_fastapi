@@ -3,9 +3,15 @@ from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any, Union
 from datetime import datetime
 from database import get_db
-from models import ApiRequest
-from schemas import ApiRequestCreate, ApiRequestResponse
+from models import ApiRequest, Category
+from schemas import (
+    ApiRequestCreate,
+    ApiRequestResponse,
+    CategorySchema,
+    CategorySyncResponse
+)
 from tgstat_client import tgstat_client
+from categories import sync_categories as sync_categories_service
 import json
 
 router = APIRouter(prefix="/api/tgstat", tags=["TGStat"])
@@ -136,5 +142,22 @@ async def get_request_by_id(
         status_code=request.status_code,
         response_data=request.response_data,
         created_at=request.created_at
+    )
+
+
+@router.get("/categories", response_model=list[CategorySchema])
+async def list_categories(db: Session = Depends(get_db)):
+    """Возвращает список категорий, сохраненных в БД."""
+    categories = db.query(Category).order_by(Category.name).all()
+    return [CategorySchema(code=cat.code, name=cat.name) for cat in categories]
+
+
+@router.post("/categories/sync", response_model=CategorySyncResponse)
+async def sync_categories(db: Session = Depends(get_db)):
+    """Синхронизирует категории из TGStat API и сохраняет их в БД."""
+    saved_count, categories = await sync_categories_service(db)
+    return CategorySyncResponse(
+        saved_count=saved_count,
+        categories=[CategorySchema(code=cat.code, name=cat.name) for cat in categories]
     )
 
