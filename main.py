@@ -1,13 +1,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from database import init_db
 from api.routes import router
 import uvicorn
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Управление жизненным циклом приложения"""
+    # Startup
+    init_db()
+    print("База данных инициализирована")
+    yield
+    # Shutdown
+    from tgstat_client import tgstat_client
+    await tgstat_client.close()
+
+
 app = FastAPI(
     title="TGStat API Client",
     description="Приложение для выполнения REST GET запросов к TGStat API и сохранения результатов в PostgreSQL",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Настройка CORS
@@ -21,20 +36,6 @@ app.add_middleware(
 
 # Подключение роутеров
 app.include_router(router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Инициализация БД при запуске приложения"""
-    init_db()
-    print("База данных инициализирована")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Закрытие соединений при остановке приложения"""
-    from tgstat_client import tgstat_client
-    await tgstat_client.close()
 
 
 @app.get("/")

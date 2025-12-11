@@ -15,7 +15,7 @@ async def example_make_request():
             f"{BASE_URL}/api/tgstat/request",
             params={
                 "endpoint": "/channels/get",
-                "params": json.dumps({"channel": "@example"}),
+                "params": json.dumps({"channelId": "@SolovievLive"}),
                 "save_to_db": "true"
             }
         )
@@ -24,14 +24,14 @@ async def example_make_request():
         print("\n" + "="*50 + "\n")
         
         # Пример 2: Поиск по двум категориям с сохранением результатов
-        categories = ["apps", "art"]
+        categories = ["apps", "art", "tech"]
         search_results = {}
         for category in categories:
             search_response = await client.get(
                 f"{BASE_URL}/api/tgstat/request",
                 params={
                     "endpoint": "/channels/search",
-                    "params": json.dumps({"q": "технологии", "category": category}),
+                    "params": json.dumps({"q": " информационные технологии", "category": category, "country": "ru"}),
                     "save_to_db": "true"
                 }
             )
@@ -72,6 +72,40 @@ async def example_get_request_by_id():
         print(response.json())
 
 
+async def example_sync_categories_service():
+    """Пример вызова сервиса синхронизации категорий"""
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(f"{BASE_URL}/api/tgstat/categories/sync", timeout=60.0)
+            
+            # Всегда выводим статус код
+            print(f"Статус ответа: {response.status_code}")
+            
+            # Если ошибка, выводим подробности
+            if response.status_code >= 400:
+                try:
+                    error_data = response.json()
+                    print(f"Ошибка запроса (status={response.status_code}):")
+                    print(json.dumps(error_data, ensure_ascii=False, indent=2))
+                except:
+                    print(f"Ошибка запроса (status={response.status_code}): {response.text}")
+                return
+            
+            # Успешный ответ
+            data = response.json()
+            print(f"Синхронизация категорий успешно завершена:")
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+            
+        except httpx.TimeoutException:
+            print(f"Ошибка: Превышено время ожидания ответа от сервера")
+        except httpx.RequestError as exc:
+            print(f"Ошибка соединения: {exc}")
+        except Exception as exc:
+            print(f"Неожиданная ошибка: {exc}")
+            import traceback
+            traceback.print_exc()
+
+
 if __name__ == "__main__":
     import asyncio
     
@@ -79,7 +113,8 @@ if __name__ == "__main__":
     # python main.py
     
     # Раскомментируйте нужный пример:
-    # asyncio.run(example_make_request())
+    asyncio.run(example_make_request())
     # asyncio.run(example_get_requests())
     # asyncio.run(example_get_request_by_id())
+    # asyncio.run(example_sync_categories_service())
 
